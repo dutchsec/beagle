@@ -44,6 +44,17 @@ func (d *New) setNew(v bool) {
 	d.new = v
 }
 
+func Connect(driverName, dataSourceName string) (*DB, error) {
+	db, err := sqlx.Connect(driverName, dataSourceName)
+	if err != nil {
+		return nil, err
+	}
+
+	return &DB{
+		db,
+	}, nil
+}
+
 // DB TODO: NEEDS COMMENT INFO
 type DB struct {
 	*sqlx.DB
