@@ -14,5 +14,5 @@ type equalOperator struct {
 
 // Make TODO: NEEDS COMMENT INFO
 func (o *equalOperator) Make() (string, []interface{}) {
-	return fmt.Sprintf("%s = ?", o.field), []interface{}{o.value}
+	return fmt.Sprintf("`%s` = ?", o.field), []interface{}{o.value}
 }
