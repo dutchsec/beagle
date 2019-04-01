@@ -9,8 +9,10 @@ type andOperator struct {
 	operators []Operator
 }
 
+// TODO: the AndOperator should check and combine multiple and operators and should merge them!
+
 // AndOperator TODO: NEEDS COMMENT INFO
-func AndOperator(operators ...Operator) Operator {
+func And(operators ...Operator) Operator {
 	return &andOperator{operators}
 }
 

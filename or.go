@@ -9,8 +9,8 @@ type orOperator struct {
 	operators []Operator
 }
 
-// OrOperator TODO: NEEDS COMMENT INFO
-func OrOperator(operators ...Operator) Operator {
+// Or TODO: NEEDS COMMENT INFO
+func Or(operators ...Operator) Operator {
 	return &orOperator{operators}
 }
 

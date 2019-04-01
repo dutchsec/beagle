@@ -2,8 +2,8 @@ package db
 
 import "fmt"
 
-// EqualOperator TODO: NEEDS COMMENT INFO
-func EqualOperator(field string, value interface{}) Operator {
+// Equal TODO: NEEDS COMMENT INFO
+func Equal(field string, value interface{}) Operator {
 	return &equalOperator{field, value}
 }
 

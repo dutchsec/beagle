@@ -2,8 +2,8 @@ package db
 
 import "fmt"
 
-// IsNotNullOperator TODO: NEEDS COMMENT INFO
-func IsNotNullOperator(field string) Operator {
+// IsNotNull TODO: NEEDS COMMENT INFO
+func IsNotNull(field string) Operator {
 	return &isNotNullOperator{field}
 }
 
