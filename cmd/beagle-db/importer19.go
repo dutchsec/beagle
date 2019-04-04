@@ -11,17 +11,14 @@
 // WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
 // See the License for the specific language governing permissions and
 // limitations under the License.
-package db
+package main
 
-type queryxOption interface {
-	Wrap(string, []interface{}) (string, []interface{})
-}
+import (
+	"go/importer"
+	"go/types"
+)
 
-// Query TODO: NEEDS COMMENT INFO
-type Query string
-
-// Queryx TODO: NEEDS COMMENT INFO
-type Queryx struct {
-	Query  Query
-	Params []interface{}
+func defaultImporter() types.Importer {
+	// return importer.For("source", nil)
+	return importer.Default()
 }

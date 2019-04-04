@@ -11,17 +11,33 @@
 // WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
 // See the License for the specific language governing permissions and
 // limitations under the License.
-package db
+package main
 
-type queryxOption interface {
-	Wrap(string, []interface{}) (string, []interface{})
-}
+import (
+	"fmt"
+	"log"
+	"os"
+	"os/exec"
+	"path"
+)
 
-// Query TODO: NEEDS COMMENT INFO
-type Query string
+func main() {
+	ex, err := os.Executable()
+	if err != nil {
+		log.Fatal(err)
+	}
+	dir := path.Dir(ex)
 
-// Queryx TODO: NEEDS COMMENT INFO
-type Queryx struct {
-	Query  Query
-	Params []interface{}
+	wd, _ := os.Getwd()
+	_ = wd
+
+	cmd := exec.Command(path.Join(dir, fmt.Sprintf("beagle-%s", os.Args[1])), os.Args[2:]...)
+
+	cmd.Stdout = os.Stdout
+	cmd.Stderr = os.Stderr
+
+	if err := cmd.Run(); err != nil {
+		fmt.Println(err.Error())
+		os.Exit(1)
+	}
 }

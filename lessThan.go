@@ -13,15 +13,19 @@
 // limitations under the License.
 package db
 
-type queryxOption interface {
-	Wrap(string, []interface{}) (string, []interface{})
+import "fmt"
+
+// LessThan TODO: NEEDS COMMENT INFO
+func LessThan(field string, value interface{}) Operator {
+	return &lessThanOperator{field, value}
 }
 
-// Query TODO: NEEDS COMMENT INFO
-type Query string
+type lessThanOperator struct {
+	field string
+	value interface{}
+}
 
-// Queryx TODO: NEEDS COMMENT INFO
-type Queryx struct {
-	Query  Query
-	Params []interface{}
+// Make TODO: NEEDS COMMENT INFO
+func (o *lessThanOperator) Make() (string, []interface{}) {
+	return fmt.Sprintf("`%s` < ?", o.field), []interface{}{o.value}
 }
