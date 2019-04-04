@@ -14,11 +14,14 @@
 package main
 
 import (
+	"context"
 	"fmt"
 	"log"
 	"os"
 	"os/exec"
+	"os/signal"
 	"path"
+	"syscall"
 )
 
 func main() {
@@ -31,10 +34,24 @@ func main() {
 	wd, _ := os.Getwd()
 	_ = wd
 
-	cmd := exec.Command(path.Join(dir, fmt.Sprintf("beagle-%s", os.Args[1])), os.Args[2:]...)
+	ctx, cancel := context.WithCancel(context.Background())
 
+	cmd := exec.CommandContext(ctx, path.Join(dir, fmt.Sprintf("beagle-%s", os.Args[1])), os.Args[2:]...)
 	cmd.Stdout = os.Stdout
 	cmd.Stderr = os.Stderr
+
+	go func() {
+		signalChan := make(chan os.Signal, 1)
+		signal.Notify(signalChan, os.Interrupt)
+		signal.Notify(signalChan, syscall.SIGTERM)
+
+		select {
+		case s := <-signalChan:
+			cmd.Process.Signal(s)
+		}
+	}()
+
+	_ = cancel
 
 	if err := cmd.Run(); err != nil {
 		fmt.Println(err.Error())
