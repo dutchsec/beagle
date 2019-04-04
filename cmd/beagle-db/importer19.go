@@ -19,6 +19,6 @@ import (
 )
 
 func defaultImporter() types.Importer {
-	// return importer.For("source", nil)
-	return importer.Default()
+	return importer.For("source", nil)
+	// return importer.Default()
 }
