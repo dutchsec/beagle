@@ -35,4 +35,11 @@ Update license headers for all go files.
 beagle license .
 ```
 
-https://stackoverflow.com/questions/6135376/mysql-select-where-field-in-subquery-extremely-slow-why
+### Beagle Run
+
+Run the application and restart on file modifications.
+
+```
+beagle run go run main.go
+```
+
