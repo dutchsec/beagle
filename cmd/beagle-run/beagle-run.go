@@ -163,6 +163,7 @@ func main() {
 				for {
 					select {
 					case <-events:
+						fmt.Fprint(os.Stdout, ".")
 						threshold = time.After(time.Duration(WorkDelay * time.Millisecond))
 					case <-threshold:
 						fmt.Fprintln(os.Stderr, color.YellowString(fmt.Sprintf("[goguard] Changes detected. Restarting.")))
@@ -212,6 +213,7 @@ func main() {
 										os.Exit(0)
 									}
 								case <-events:
+									fmt.Fprint(os.Stdout, ".")
 									threshold = time.After(time.Duration(WorkDelay * time.Millisecond))
 								case <-threshold:
 									kill(cmd.Process)
@@ -290,8 +292,6 @@ func main() {
 				continue
 			}
 
-			fmt.Println(ev.Name)
-
 			select {
 			case events <- ev.Name:
 			default:
@@ -309,4 +309,4 @@ func main() {
 			return
 		}
 	}
-    }
+}
