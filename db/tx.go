@@ -119,45 +119,31 @@ func (tx *Tx) Exec(qx Queryx) error {
 // Getx TODO: NEEDS COMMENT INFO
 func (tx *Tx) Getx(o interface{}, qx Queryx) error {
 	if u, ok := o.(Getter); ok {
-		return u.Get(tx.Tx, qx.Query, qx.Params...)
+		return u.Get(tx.Tx, qx)
 	}
 
-	stmt, err := tx.Preparex(string(qx.Query))
-	if err != nil {
-		return err
-	}
-
-	if err := stmt.Get(o, qx.Params...); err != nil {
-		return err
-	}
-
-	if n, ok := o.(Newerer); ok {
-		n.setNew(false)
-	}
-
-	return nil
+	log.Error("No getter found for object: %s", reflect.TypeOf(o))
+	return ErrNoGetterFound
 }
 
 // Get TODO: NEEDS COMMENT INFO
-func (tx *Tx) Get(o interface{}, query Query, params ...interface{}) error {
+func (tx *Tx) Get(o interface{}, qx Queryx) error {
 	if u, ok := o.(Getter); ok {
-		return u.Get(tx.Tx, query, params...)
+		return u.Get(tx.Tx, qx)
 	}
 
-	stmt, err := tx.Preparex(string(query))
-	if err != nil {
-		return err
+	log.Error("No getter found for object: %s", reflect.TypeOf(o))
+	return ErrNoGetterFound
+}
+
+// Update TODO: NEEDS COMMENT INFO
+func (tx *Tx) InsertOrUpdate(o interface{}) error {
+	if u, ok := o.(InsertOrUpdater); ok {
+		return u.InsertOrUpdate(tx.Tx)
 	}
 
-	if err := stmt.Get(o, params...); err != nil {
-		return err
-	}
-
-	if n, ok := o.(Newerer); ok {
-		n.setNew(false)
-	}
-
-	return nil
+	log.Error("No InsertOrUpdate found for object: %s", reflect.TypeOf(o))
+	return ErrNoInsertOrUpdaterFound
 }
 
 // Update TODO: NEEDS COMMENT INFO
@@ -166,7 +152,7 @@ func (tx *Tx) Update(o interface{}) error {
 		return u.Update(tx.Tx)
 	}
 
-	log.Debug("No updater found for object: %s", reflect.TypeOf(o))
+	log.Error("No updater found for object: %s", reflect.TypeOf(o))
 	return ErrNoUpdaterFound
 }
 
@@ -176,7 +162,7 @@ func (tx *Tx) Delete(o interface{}) error {
 		return u.Delete(tx.Tx)
 	}
 
-	log.Debug("No deleter found for object: %s", reflect.TypeOf(o))
+	log.Error("No deleter found for object: %s", reflect.TypeOf(o))
 	return ErrNoDeleterFound
 }
 
@@ -190,7 +176,7 @@ func (tx *Tx) Insert(o interface{}) error {
 		return err
 	}
 
-	log.Debug("No inserter found for object: %s", reflect.TypeOf(o))
+	log.Error("No inserter found for object: %s", reflect.TypeOf(o))
 	return ErrNoInserterFound
 }
 

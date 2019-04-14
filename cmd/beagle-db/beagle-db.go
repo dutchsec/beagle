@@ -386,7 +386,59 @@ func (g *Generator) generate() {
 		g.Printf(")\"")
 		g.Printf("\n")
 
+		g.Printf("query%sInsertOrUpdate db.Query = \"INSERT INTO %s (", name, *tableName)
+		for i, column := range columns {
+			if i > 0 {
+				g.Printf(", ")
+			}
+
+			g.Printf("`%s`", column)
+		}
+
+		g.Printf(") VALUES (")
+		for i, column := range columns {
+			if i > 0 {
+				g.Printf(", ")
+			}
+
+			g.Printf(":%s", column)
+		}
+
+		g.Printf(") ON DUPLICATE KEY UPDATE ")
+
+		for i, column := range columns {
+			if column == "created_at" {
+				continue
+			}
+
+			if i > 0 {
+				g.Printf(", ")
+			}
+
+			g.Printf("`%s`=:%s", column, column)
+		}
+
+		g.Printf("\"")
+
+		g.Printf("\n")
+
 		g.Printf(")\n")
+
+		g.Printf("func (s *%s) Get(tx *sqlx.Tx, qx db.Queryx) error {\n", name)
+		g.Printf(`
+	stmt, err := tx.Preparex(string(qx.Query))
+	if err != nil {
+		return err
+	}
+
+	if err := stmt.Get(s, qx.Params...); err != nil {
+		return err
+	}
+
+return nil
+}`)
+		g.Printf("\n")
+		g.Printf("\n")
 
 		g.Printf("func (s *%s) Update(tx *sqlx.Tx) error {\n", name)
 
@@ -399,6 +451,24 @@ func (g *Generator) generate() {
 		}
 
 		g.Printf(` _, err := tx.NamedExec(string(query%sUpdate), s)
+	return err
+}
+`, name)
+
+		// should we combine update and insert or update?
+		g.Printf("func (s *%s) InsertOrUpdate(tx *sqlx.Tx) error {\n", name)
+
+		for _, column := range columns {
+			// actually check field name (CreatedAt), instead of
+			// column name
+			if column == "created_at" {
+			} else if column == "updated_at" {
+				g.Printf("s.UpdatedAt = time.Now()\n")
+			}
+		}
+
+		g.Printf(`
+	_, err := tx.NamedExec(string(query%sInsertOrUpdate), s)
 	return err
 }
 `, name)
@@ -424,6 +494,15 @@ func (g *Generator) generate() {
 		g.Printf(`func (s *%s) Delete(tx *sqlx.Tx) error {`, name)
 		g.Printf(`_, err := tx.NamedExec(string(query%sDelete), s)
 	return err
+}
+`, name)
+
+		// single (alert) plural (alerts)
+		g.Printf(`func Query%ss() db.Queryx {`, name)
+		g.Printf(`return db.Queryx{
+		Query:  query%sSelect,
+		Params: []interface{}{},
+	}
 }
 `, name)
 

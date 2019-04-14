@@ -107,6 +107,10 @@ type Updater interface {
 	Update(*sqlx.Tx) error
 }
 
+type InsertOrUpdater interface {
+	InsertOrUpdate(*sqlx.Tx) error
+}
+
 // Inserter TODO: NEEDS COMMENT INFO
 type Inserter interface {
 	Insert(*sqlx.Tx) error
@@ -119,7 +123,7 @@ type Selecter interface {
 
 // Getter TODO: NEEDS COMMENT INFO
 type Getter interface {
-	Get(*sqlx.Tx, Query, ...interface{}) error
+	Get(*sqlx.Tx, Queryx) error
 }
 
 // Deleter TODO: NEEDS COMMENT INFO
