@@ -91,6 +91,10 @@ func getType(pschema *jsonschema.Schema) string {
 			return "utils.UUID"
 		} else if ref.URL == "beacon.json" {
 			return "Beacon"
+		} else if ref.URL == "server.json" {
+			return "Server"
+		} else if ref.URL == "user.json" {
+			return "User"
 		} else if ref.URL == "trigger.json" {
 			return "Trigger"
 		}
