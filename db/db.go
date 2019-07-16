@@ -17,6 +17,7 @@ import (
 	"context"
 	"database/sql"
 	"runtime"
+	"sync"
 	"time"
 
 	"github.com/jmoiron/sqlx"
@@ -24,15 +25,7 @@ import (
 	logging "github.com/op/go-logging"
 )
 
-// TODO GENERATOR
-//     created_at timestamp without time zone NOT NULL,
-// updated_at timestamp without time zone NOT NULL,
-// CreatedAt            time.Time    `db:"created_at"`
-// UpdatedAt            time.Time    `db:"updated_at"`
-
-// ctx.tx.Selectx().Where().Execute(&connections)
-
-var log = logging.MustGetLogger("go.dutchsec.com/db")
+var log = logging.MustGetLogger("go.dutchsec.com/beagle/db")
 
 // Newerer TODO: NEEDS COMMENT INFO
 type Newerer interface {
@@ -97,6 +90,7 @@ func (db *DB) Begin(ctx context.Context, opts ...TxOptionFunc) *Tx {
 	return &Tx{
 		Tx: tx,
 
+		m:          &sync.Mutex{},
 		stacktrace: string(trace),
 		time:       time.Now(),
 	}
@@ -123,7 +117,7 @@ type Selecter interface {
 
 // Getter TODO: NEEDS COMMENT INFO
 type Getter interface {
-	Get(*sqlx.Tx, Queryx) error
+	Get(*sqlx.Tx, Query, []interface{}) error
 }
 
 // Deleter TODO: NEEDS COMMENT INFO

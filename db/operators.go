@@ -23,3 +23,7 @@ type Operator interface {
 func Active() Operator {
 	return &equalOperator{"active", "1"}
 }
+
+func True(fld Field) Operator {
+	return &equalOperator{fld, "1"}
+}

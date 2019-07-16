@@ -13,11 +13,7 @@
 // limitations under the License.
 package db
 
-import (
-	"fmt"
-	"strings"
-)
-
+/*
 // Where TODO: NEEDS COMMENT INFO
 func (qx Queryx) OrderBy(fields ...string) Queryx {
 	q := string(qx.Query)
@@ -54,11 +50,6 @@ func OrderBy(fields ...string) selectOption {
 	return &orderByOption{fields, false}
 }
 
-type orderByOption struct {
-	fields []string
-	desc   bool
-}
-
 // Wrap TODO: NEEDS COMMENT INFO
 func (o *orderByOption) Wrap(query string, params []interface{}) (string, []interface{}) {
 	query = fmt.Sprintf("SELECT * FROM (%s) a ORDER BY %s", query, strings.Join(o.fields, ","))
@@ -68,4 +59,10 @@ func (o *orderByOption) Wrap(query string, params []interface{}) (string, []inte
 	}
 
 	return query, params
+}
+*/
+
+type orderByOption struct {
+	fields []string
+	desc   bool
 }

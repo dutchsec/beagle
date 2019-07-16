@@ -304,7 +304,7 @@ func (g *Generator) generate(typeName string) {
 		g.Printf("const (\n")
 		for name, columns := range file.types {
 			for _, column := range columns {
-				g.Printf("%s%s = \"%s\"\n", name, nameize(column), column)
+				g.Printf("%s%s = \"`%s`.`%s`\"\n", name, nameize(column), *tableName, column)
 			}
 		}
 		g.Printf(")\n")
@@ -399,14 +399,14 @@ func (g *Generator) generate(typeName string) {
 
 			g.Printf(")\n")
 
-			g.Printf("func (s *%s) Get(tx *sqlx.Tx, qx db.Queryx) error {\n", name)
+			g.Printf("func (s *%s) Get(tx *sqlx.Tx, q db.Query, params []interface{}) error {\n", name)
 			g.Printf(`
-			stmt, err := tx.Preparex(string(qx.Query))
+			stmt, err := tx.Preparex(string(q))
 			if err != nil {
 				return err
 			}
 
-			if err := stmt.Get(s, qx.Params...); err != nil {
+			if err := stmt.Get(s, params...); err != nil {
 				return err
 			}
 
@@ -474,12 +474,25 @@ func (g *Generator) generate(typeName string) {
 
 			// single (alert) plural (alerts)
 			g.Printf(`func Query%ss() db.Queryx {`, name)
-			g.Printf(`return db.Queryx{
-				Query:  query%sSelect,
-				Params: []interface{}{},
+
+			g.Printf("return db.SelectQuery(\"%s\").\n", *tableName)
+			g.Printf("Fields(\n")
+
+			for name, columns := range file.types {
+				for _, column := range columns {
+					g.Printf("%s%s,\n", name, nameize(column))
+				}
 			}
-		}
-		`, name)
+
+			g.Printf(")\n")
+			g.Printf("}\n")
+
+			/* g.Printf(`return db.Queryx{
+					Query:  query%sSelect,
+					Params: []interface{}{},
+				}
+			}`, name)
+			*/
 
 		}
 	}

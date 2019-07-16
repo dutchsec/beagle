@@ -13,10 +13,7 @@
 // limitations under the License.
 package db
 
-import (
-	"fmt"
-)
-
+/*
 // Where TODO: NEEDS COMMENT INFO
 func Where(operator Operator) queryxOption {
 	return &whereOption{operator}
@@ -34,16 +31,19 @@ func (qx Queryx) Where(operator Operator) Queryx {
 		params,
 	}
 }
+*/
 
 type whereOption struct {
 	operator Operator
 }
 
+/*
 // Wrap TODO: NEEDS COMMENT INFO
 func (o *whereOption) Wrap(query string, params []interface{}) (string, []interface{}) {
 	whereQuery, whereParams := o.operator.Make()
-	query = fmt.Sprintf("SELECT * FROM (%s) a WHERE %s", query, whereQuery)
+	query = fmt.Sprintf("%s WHERE %s", query, whereQuery)
 
 	params = append(params, whereParams...)
 	return query, params
 }
+*/

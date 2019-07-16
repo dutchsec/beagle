@@ -14,9 +14,12 @@
 package db
 
 import (
+	"bytes"
 	"database/sql"
 	"fmt"
 	"reflect"
+	"runtime"
+	"strings"
 	"sync"
 	"time"
 
@@ -25,8 +28,9 @@ import (
 
 // Tx TODO: NEEDS COMMENT INFO
 type Tx struct {
-	*sqlx.Tx
+	Tx *sqlx.Tx
 
+	m          *sync.Mutex
 	stacktrace string
 	time       time.Time
 
@@ -35,79 +39,221 @@ type Tx struct {
 	queries []string
 }
 
-func (tx *Tx) Preparex(query string) (*sqlx.Stmt, error) {
-	tx.queries = append(tx.queries, query)
+func (tx *Tx) Preparex(query Query) (*sqlx.Stmt, error) {
+	tx.queries = append(tx.queries, string(query))
 
-	if stmt, ok := tx.statementsCache.Load(query); ok {
+	if stmt, ok := tx.statementsCache.Load(string(query)); ok {
 		return stmt.(*sqlx.Stmt), nil
 	}
 
-	stmt, err := tx.Tx.Preparex(query)
+	stmt, err := tx.Tx.Preparex(string(query))
 	if err != nil {
 		return nil, err
 	}
 
-	tx.statementsCache.Store(query, stmt)
+	tx.statementsCache.Store(string(query), stmt)
 	return stmt, nil
+}
+
+func findMethod() string {
+	trace := make([]byte, 1024)
+
+	count := runtime.Stack(trace, true)
+	trace = trace[:count]
+
+	parts := bytes.Split(trace, []byte("\n"))
+
+	return strings.TrimSpace(string(parts[6]))
 }
 
 func (tx *Tx) Commit() error {
 	err := tx.Tx.Commit()
 
 	if time.Now().Sub(tx.time) > 1*time.Second {
-		log.Warning("Transaction commit took long, took: %q, query=%v.", time.Now().Sub(tx.time), tx.queries)
+		log.Warningf("Transaction commit (%s) took long, took: %s, queries=\n * %v.", findMethod(), time.Now().Sub(tx.time), strings.Join(tx.queries, "\n * "))
 	}
 
-	log.Info("Transaction commit, took: %q.", time.Now().Sub(tx.time))
+	log.Debugf("Transaction commit (%s), took: %v.", findMethod(), time.Now().Sub(tx.time))
 	return err
 }
 
 func (tx *Tx) Rollback() error {
 	err := tx.Tx.Rollback()
-	log.Info("Transaction rollback, took: %q", time.Now().Sub(tx.time))
+	log.Debugf("Transaction rollback, took: %v", time.Now().Sub(tx.time))
 	return err
 }
 
+/*
+TableQuery("table").Fields(AllFields).Where().OrderBy().GroupBy(FieldX)
+TableQuery("table").Fields(Count("xyz")).Where(db.And()).OrderBy(Fieldxyz).GroupBy(FieldOther)
+TableQuery("events").Fields("test1").Join("otherTable").On(db.Equal("test", "test2"))
+TableQuery("events").Fields("test1").LeftJoin("otherTable").On(db.Equal("test", "test2"))
+TableQuery("events").Fields("test1").RightJoin("otherTable").On(db.Equal("test", "test2"))
+QueryActions() = Query()
+*/
+
+/*
+func Count(field Field) Field {
+
+}
+*/
+
+/*
+type fields []Field
+
+func (f *fields) String() {
+}
+*/
+
 // Selectx TODO: NEEDS COMMENT INFO
-func (tx *Tx) Selectx(o interface{}, qx Queryx, options ...selectOption) error {
-	q := string(qx.Query)
-	params := qx.Params
+func (tx *Tx) Selectx(o interface{}, qy Queryx, options ...selectOption) error {
+	tx.m.Lock()
+	defer tx.m.Unlock()
 
-	for _, option := range options {
-		q, params = option.Wrap(q, params)
-	}
+	q, params := qy.Build()
 
-	log.Debug(q)
+	start := time.Now()
+
+	defer func() {
+		now := time.Now()
+		if now.Sub(start) > 1*time.Second {
+			log.Warningf("Query took too long %v: %s", now.Sub(start), q)
+		}
+	}()
+
+	/*
+		for _, option := range options {
+			q, params = option.Wrap(q, params)
+		}
+	*/
 
 	if u, ok := o.(Selecter); ok {
-		return u.Select(tx.Tx, Query(q), params...)
-	}
+		err := u.Select(tx.Tx, q, params...)
+		if err != nil {
+			log.Errorf("Error executing query: %s: %s", q, err.Error())
+		}
 
-	// prepared statements should be cached
+		return err
+	}
 
 	stmt, err := tx.Preparex(q)
 	if err != nil {
+		log.Errorf("Error executing query: %s: %s", q, err.Error())
 		return err
 	}
 
 	return stmt.Select(o, params...)
 }
 
-// Countx TODO: NEEDS COMMENT INFO
-func (tx *Tx) Countx(qx Queryx) (int, error) {
-	stmt, err := tx.Preparex(fmt.Sprintf("SELECT COUNT(*) FROM (%s) q", string(qx.Query)))
+// Selectx TODO: NEEDS COMMENT INFO
+/*
+func (tx *Tx) Selectx(o interface{}, qx Queryx, options ...selectOption) error {
+	q := string(qx.Query)
+	params := qx.Params
+
+	start := time.Now()
+
+	defer func() {
+		now := time.Now()
+		if now.Sub(start) > 1*time.Second {
+			log.Warningf("Query took too long %v: %s", now.Sub(start), q)
+		}
+	}()
+
+	for _, option := range options {
+		q, params = option.Wrap(q, params)
+	}
+
+	if u, ok := o.(Selecter); ok {
+		err := u.Select(tx.Tx, Query(q), params...)
+		if err != nil {
+			log.Errorf("Error executing query: %s: %s", q, err.Error())
+		}
+
+		return err
+	}
+
+	stmt, err := tx.Preparex(q)
 	if err != nil {
+		log.Errorf("Error executing query: %s: %s", q, err.Error())
+		return err
+	}
+
+	return stmt.Select(o, params...)
+}
+*/
+
+// Exists TODO: NEEDS COMMENT INFO
+func (tx *Tx) Exists(qy Queryx) (bool, error) {
+	tx.m.Lock()
+	defer tx.m.Unlock()
+
+	q, params := qy.Build()
+
+	stmt, err := tx.Preparex(Query(fmt.Sprintf("SELECT EXISTS(%s)", string(q))))
+	if err != nil {
+		log.Errorf("Error preparing query: %s: %s", q, err.Error())
+		return false, err
+	}
+
+	exists := false
+
+	err = stmt.Get(&exists, params...)
+	if err != nil {
+		log.Errorf("Error executing query: %s: %s", q, err.Error())
+		return false, err
+	}
+
+	return exists, err
+}
+
+// Countx TODO: NEEDS COMMENT INFO
+func (tx *Tx) Countx(qy Queryx) (int, error) {
+	tx.m.Lock()
+	defer tx.m.Unlock()
+
+	q, params := qy.Build()
+
+	stmt, err := tx.Preparex(q)
+	if err != nil {
+		log.Errorf("Error preparing query: %s: %s", q, err.Error())
 		return 0, err
 	}
 
 	count := 0
-	err = stmt.Get(&count, qx.Params...)
+
+	err = stmt.Get(&count, params...)
+	if err != nil {
+		log.Errorf("Error executing query: %s: %s", q, err.Error())
+	}
+
 	return count, err
 }
 
+/*
+// Countx TODO: NEEDS COMMENT INFO
+func (tx *Tx) Countx(qx Queryx) (int, error) {
+	stmt, err := tx.Preparex(fmt.Sprintf("SELECT COUNT(*) FROM (%s) q", string(qx.Query)))
+	if err != nil {
+		log.Errorf("Error preparing query: %s: %s", qx.Query, err.Error())
+		return 0, err
+	}
+
+	count := 0
+
+	err = stmt.Get(&count, qx.Params...)
+	if err != nil {
+		log.Errorf("Error executing query: %s: %s", qx.Query, err.Error())
+	}
+
+	return count, err
+}
+*/
+
 // Exec TODO: NEEDS COMMENT INFO
+/*
 func (tx *Tx) Exec(qx Queryx) error {
-	stmt, err := tx.Preparex(string(qx.Query))
+	stmt, err := tx.Preparex(qx.Query)
 	if err != nil {
 		return err
 	}
@@ -115,11 +261,59 @@ func (tx *Tx) Exec(qx Queryx) error {
 	_, err = stmt.Exec(qx.Params...)
 	return err
 }
+*/
+func (tx *Tx) Execute(qy Queryx) error {
+	tx.m.Lock()
+	defer tx.m.Unlock()
+
+	q, params := qy.Build()
+
+	stmt, err := tx.Preparex(q)
+	if err != nil {
+		log.Errorf("Error preparing query: %s: %s", q, err.Error())
+		return err
+	}
+
+	_, err = stmt.Exec(params...)
+	if err != nil {
+		log.Errorf("Error executing query: %s: %s", q, err.Error())
+		return err
+	}
+
+	return err
+}
 
 // Getx TODO: NEEDS COMMENT INFO
+func (tx *Tx) Getx(o interface{}, qy Queryx) error {
+	tx.m.Lock()
+	defer tx.m.Unlock()
+
+	q, params := qy.Build()
+
+	if u, ok := o.(Getter); ok {
+		err := u.Get(tx.Tx, q, params)
+		if IsNoRowsErr(err) {
+		} else if err != nil {
+			log.Errorf("Error executing query: %s: %s", q, err.Error())
+		}
+
+		return err
+	}
+
+	log.Error("No getter found for object: %s", reflect.TypeOf(o))
+	return ErrNoGetterFound
+}
+
+// Getx TODO: NEEDS COMMENT INFO
+/*
 func (tx *Tx) Getx(o interface{}, qx Queryx) error {
 	if u, ok := o.(Getter); ok {
-		return u.Get(tx.Tx, qx)
+		err := u.Get(tx.Tx, qx)
+		if err != nil {
+			log.Errorf("Error executing query: %s: %s", qx.Query, err.Error())
+		}
+
+		return err
 	}
 
 	log.Error("No getter found for object: %s", reflect.TypeOf(o))
@@ -129,11 +323,25 @@ func (tx *Tx) Getx(o interface{}, qx Queryx) error {
 // Get TODO: NEEDS COMMENT INFO
 func (tx *Tx) Get(o interface{}, qx Queryx) error {
 	if u, ok := o.(Getter); ok {
-		return u.Get(tx.Tx, qx)
+		err := u.Get(tx.Tx, qx)
+		if err != nil {
+			log.Errorf("Error executing query: %s: %s", qx.Query, err.Error())
+		}
+
+		return err
 	}
 
 	log.Error("No getter found for object: %s", reflect.TypeOf(o))
 	return ErrNoGetterFound
+}
+*/
+
+// Update TODO: NEEDS COMMENT INFO
+func (tx *Tx) NamedExec(query string, arg interface{}) (sql.Result, error) {
+	tx.m.Lock()
+	defer tx.m.Unlock()
+
+	return tx.Tx.NamedExec(query, arg)
 }
 
 // Update TODO: NEEDS COMMENT INFO

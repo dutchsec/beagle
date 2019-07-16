@@ -15,6 +15,7 @@ package db
 
 import (
 	"fmt"
+	"strings"
 )
 
 type inOperator struct {
@@ -33,5 +34,32 @@ func InOperator(field string, qry Queryx) Operator {
 
 // Make TODO: NEEDS COMMENT INFO
 func (o *inOperator) Make() (string, []interface{}) {
-	return fmt.Sprintf("%s IN (%s)", o.field, o.qry.Query), o.qry.Params
+	qry, params := o.qry.Build()
+
+	return fmt.Sprintf("%s IN (%s)", o.field, qry), params
+}
+
+type inStringOperator struct {
+	params []interface{}
+
+	field string
+}
+
+// OrOperator TODO: NEEDS COMMENT INFO
+func In(field string, params []interface{}) Operator {
+	return &inStringOperator{
+		field:  field,
+		params: params,
+	}
+}
+
+// Make TODO: NEEDS COMMENT INFO
+func (o *inStringOperator) Make() (string, []interface{}) {
+	placeholders := make([]string, len(o.params))
+	for i := 0; i < len(o.params); i++ {
+		placeholders[i] = "?"
+	}
+
+	fmt.Println(fmt.Sprintf("%s IN (%s)", o.field, strings.Join(placeholders, ",")), o.params)
+	return fmt.Sprintf("%s IN (%s)", o.field, strings.Join(placeholders, ",")), o.params
 }

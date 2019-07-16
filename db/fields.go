@@ -13,12 +13,8 @@
 // limitations under the License.
 package db
 
-import (
-	"fmt"
-	"strings"
-)
-
 // Where TODO: NEEDS COMMENT INFO
+/*
 func (qx Queryx) Fields(fields ...string) Queryx {
 	q := string(qx.Query)
 	params := qx.Params
@@ -44,3 +40,5 @@ func (o *fieldsOption) Wrap(query string, params []interface{}) (string, []inter
 	query = fmt.Sprintf("SELECT %s FROM (%s) a", strings.Join(o.fields, ","), query)
 	return query, params
 }
+
+*/

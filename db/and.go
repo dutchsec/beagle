@@ -31,13 +31,17 @@ func And(operators ...Operator) Operator {
 
 // Make TODO: NEEDS COMMENT INFO
 func (o *andOperator) Make() (string, []interface{}) {
+	if len(o.operators) == 1 {
+		return o.operators[0].Make()
+	}
+
 	queries := []string{}
 	params := []interface{}{}
 
 	for _, operator := range o.operators {
 		operatorQuery, operatorParams := operator.Make()
 
-		queries = append(queries, fmt.Sprintf("(%s)", operatorQuery))
+		queries = append(queries, fmt.Sprintf("(%s) ", operatorQuery))
 		params = append(params, operatorParams...)
 	}
 

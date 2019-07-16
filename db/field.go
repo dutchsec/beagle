@@ -13,19 +13,12 @@
 // limitations under the License.
 package db
 
-import "fmt"
+type Field string
 
-// GreaterThan TODO: NEEDS COMMENT INFO
-func GreaterThan(field string, value interface{}) Operator {
-	return &greaterThanOperator{field, value}
+func (s Field) Alias(alias string) {
+	// NOT IMPLEMENTED YET
 }
 
-type greaterThanOperator struct {
-	field string
-	value interface{}
-}
-
-// Make TODO: NEEDS COMMENT INFO
-func (o *greaterThanOperator) Make() (string, []interface{}) {
-	return fmt.Sprintf("%s > ? ", o.field), []interface{}{o.value}
+func (s Field) Build() string {
+	return s.Build()
 }
