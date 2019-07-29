@@ -217,6 +217,7 @@ func (tjq tableJoinQuery) On(left, right string) Queryx {
 
 type orderBy []Field
 
+// TODO: keep track of fields on construct at once, make it an arry
 func (tq Queryx) OrderBy(fields ...Field) Queryx {
 	sfields := make([]string, len(fields))
 	for i, field := range fields {
@@ -228,6 +229,7 @@ func (tq Queryx) OrderBy(fields ...Field) Queryx {
 	return tq
 }
 
+// TODO: keep track of fields on construct at once, make it an arry
 func (tq Queryx) OrderByDesc(fields ...Field) Queryx {
 	sfields := make([]string, len(fields))
 	for i, field := range fields {
