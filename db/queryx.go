@@ -161,11 +161,3 @@ func (tq Queryx) Limit(offset, count int) Queryx {
 	tq.builder = append(tq.builder, lo)
 	return tq
 }
-
-type groupBy []Field
-
-func (tq Queryx) GroupBy(fields ...Field) Queryx {
-	gb := groupBy(fields)
-	tq.builder = append(tq.builder, gb)
-	return tq
-}
