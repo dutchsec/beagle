@@ -13,73 +13,52 @@
 // limitations under the License.
 package db
 
-/*
-type wrapper struct {
-	alias string
+type tableJoinQuery struct {
+	tableName string
+
+	tq Queryx
+
+	joinType string
+
+	left  Field
+	right Field
 }
 
-func (w *wrapper) NextAlias() string {
-	w.alias = w.alias + 1
-}
-
-*/
-
-/*
-// TODO: Join is not complete and working yet
-// Join TODO: NEEDS COMMENT INFO
-
-func (qx Queryx) Join(qry Queryx, left, right string) Queryx {
-	q := string(qx.Query)
-	params := qx.Params
-
-	q, params = Join(qry, left, right).Wrap(q, params)
-
-	return Queryx{
-		Query(q),
-		params,
+func (tq Queryx) LeftJoin(tableName string) tableJoinQuery {
+	tjq := tableJoinQuery{
+		tableName: tableName,
+		tq:        tq,
+		joinType:  "LEFT",
 	}
+
+	return tjq
 }
 
-func Join(qry Queryx, left, right string) selectOption {
-	return &joinOption{qry, left, right}
-}
-
-type joinOption struct {
-	qry   Queryx
-	left  string
-	right string
-}
-
-// Wrap TODO: NEEDS COMMENT INFO
-// what fields do we want to return?
-// do we need an genereated AllField?
-func (o *joinOption) Wrap(query string, params []interface{}) (string, []interface{}) {
-	// automatic column naming
-	query = fmt.Sprintf("SELECT a.* FROM (%s) a JOIN (%s) b ON a.`%s` = b.`%s`", query, o.qry.Query, o.left, o.right)
-	params = append(params, o.qry.Params...)
-	return query, params
-}
-
-/*
-type joinOperator struct {
-	qry Queryx
-
-	left  string
-	right string
-}
-
-// OrOperator TODO: NEEDS COMMENT INFO
-func JoinOperator(qry Queryx, left, right string) Operator {
-	return &joinOperator{
-		qry:   qry,
-		left:  left,
-		right: right,
+func (tq Queryx) RightJoin(tableName string) tableJoinQuery {
+	tjq := tableJoinQuery{
+		tableName: tableName,
+		tq:        tq,
+		joinType:  "RIGHT",
 	}
+
+	return tjq
 }
 
-// TODO: Use named fields instead of counted
-// Make TODO: NEEDS COMMENT INFO
-func (o *joinOperator) Make() (string, []interface{}) {
-	return fmt.Sprint("JOIN (%s) b ON a.`%s` = b.`%s`", o.qry.Query), o.qry.Params
+func (tq Queryx) Join(tableName string) tableJoinQuery {
+	tjq := tableJoinQuery{
+		tableName: tableName,
+		tq:        tq,
+		joinType:  "",
+	}
+
+	return tjq
 }
-*/
+
+func (tjq tableJoinQuery) On(left, right Field) Queryx {
+	tjq.left = left
+	tjq.right = right
+
+	tq := tjq.tq
+	tq.builder = append(tq.builder, tjq)
+	return tq
+}

@@ -165,56 +165,6 @@ func (tq Queryx) Where(operator Operator) Queryx {
 	return tq
 }
 
-type tableJoinQuery struct {
-	tableName string
-
-	tq Queryx
-
-	joinType string
-
-	left  Field
-	right Field
-}
-
-func (tq Queryx) LeftJoin(tableName string) tableJoinQuery {
-	tjq := tableJoinQuery{
-		tableName: tableName,
-		tq:        tq,
-		joinType:  "LEFT",
-	}
-
-	return tjq
-}
-
-func (tq Queryx) RightJoin(tableName string) tableJoinQuery {
-	tjq := tableJoinQuery{
-		tableName: tableName,
-		tq:        tq,
-		joinType:  "RIGHT",
-	}
-
-	return tjq
-}
-
-func (tq Queryx) Join(tableName string) tableJoinQuery {
-	tjq := tableJoinQuery{
-		tableName: tableName,
-		tq:        tq,
-		joinType:  "",
-	}
-
-	return tjq
-}
-
-func (tjq tableJoinQuery) On(left, right Field) Queryx {
-	tjq.left = left
-	tjq.right = right
-
-	tq := tjq.tq
-	tq.builder = append(tq.builder, tjq)
-	return tq
-}
-
 type orderBy []Field
 
 // TODO: keep track of fields on construct at once, make it an arry
