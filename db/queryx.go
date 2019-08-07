@@ -165,8 +165,6 @@ func (tq Queryx) Where(operator Operator) Queryx {
 	return tq
 }
 
-type orderBy []Field
-
 // TODO: keep track of fields on construct at once, make it an arry
 func (tq Queryx) OrderBy(fields ...Field) Queryx {
 	sfields := make([]string, len(fields))
