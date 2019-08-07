@@ -156,15 +156,6 @@ func (tq Queryx) Fields(fields ...Field) Queryx {
 	return tq
 }
 
-type where Operator
-
-func (tq Queryx) Where(operator Operator) Queryx {
-	w := where(operator)
-
-	tq.builder = append(tq.builder, w)
-	return tq
-}
-
 func (tq Queryx) Limit(offset, count int) Queryx {
 	lo := limitOption{offset, count}
 	tq.builder = append(tq.builder, lo)
