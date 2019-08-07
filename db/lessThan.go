@@ -16,12 +16,12 @@ package db
 import "fmt"
 
 // LessThan TODO: NEEDS COMMENT INFO
-func LessThan(field string, value interface{}) Operator {
+func LessThan(field Field, value interface{}) Operator {
 	return &lessThanOperator{field, value}
 }
 
 type lessThanOperator struct {
-	field string
+	field Field
 	value interface{}
 }
 

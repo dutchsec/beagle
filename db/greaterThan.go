@@ -16,12 +16,12 @@ package db
 import "fmt"
 
 // GreaterThan TODO: NEEDS COMMENT INFO
-func GreaterThan(field string, value interface{}) Operator {
+func GreaterThan(field Field, value interface{}) Operator {
 	return &greaterThanOperator{field, value}
 }
 
 type greaterThanOperator struct {
-	field string
+	field Field
 	value interface{}
 }
 

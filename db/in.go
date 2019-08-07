@@ -21,11 +21,11 @@ import (
 type inOperator struct {
 	qry Queryx
 
-	field string
+	field Field
 }
 
 // OrOperator TODO: NEEDS COMMENT INFO
-func InOperator(field string, qry Queryx) Operator {
+func InOperator(field Field, qry Queryx) Operator {
 	return &inOperator{
 		field: field,
 		qry:   qry,
@@ -36,17 +36,17 @@ func InOperator(field string, qry Queryx) Operator {
 func (o *inOperator) Make() (string, []interface{}) {
 	qry, params := o.qry.Build()
 
-	return fmt.Sprintf("%s IN (%s)", o.field, qry), params
+	return fmt.Sprintf("%s IN (%s)", string(o.field), qry), params
 }
 
 type inStringOperator struct {
 	params []interface{}
 
-	field string
+	field Field
 }
 
 // OrOperator TODO: NEEDS COMMENT INFO
-func In(field string, params []interface{}) Operator {
+func In(field Field, params []interface{}) Operator {
 	return &inStringOperator{
 		field:  field,
 		params: params,
@@ -60,6 +60,6 @@ func (o *inStringOperator) Make() (string, []interface{}) {
 		placeholders[i] = "?"
 	}
 
-	fmt.Println(fmt.Sprintf("%s IN (%s)", o.field, strings.Join(placeholders, ",")), o.params)
-	return fmt.Sprintf("%s IN (%s)", o.field, strings.Join(placeholders, ",")), o.params
+	// fmt.Println(fmt.Sprintf("%s IN (%s)", o.field, strings.Join(placeholders, ",")), o.params)
+	return fmt.Sprintf("%s IN (%s)", string(o.field), strings.Join(placeholders, ",")), o.params
 }

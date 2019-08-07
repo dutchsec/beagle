@@ -172,8 +172,8 @@ type tableJoinQuery struct {
 
 	joinType string
 
-	left  string
-	right string
+	left  Field
+	right Field
 }
 
 func (tq Queryx) LeftJoin(tableName string) tableJoinQuery {
@@ -206,7 +206,7 @@ func (tq Queryx) Join(tableName string) tableJoinQuery {
 	return tjq
 }
 
-func (tjq tableJoinQuery) On(left, right string) Queryx {
+func (tjq tableJoinQuery) On(left, right Field) Queryx {
 	tjq.left = left
 	tjq.right = right
 

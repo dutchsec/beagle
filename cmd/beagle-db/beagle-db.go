@@ -100,6 +100,7 @@ func main() {
 	g.Printf("package %s", g.pkg.name)
 	g.Printf("\n")
 	g.Printf(`import (
+db "go.dutchsec.com/beagle/db"
 )
 `) // Used by all methods.
 
@@ -301,10 +302,10 @@ func (g *Generator) generate(typeName string) {
 			return value
 		}
 
-		g.Printf("const (\n")
+		g.Printf("var (\n")
 		for name, columns := range file.types {
 			for _, column := range columns {
-				g.Printf("%s%s = \"`%s`.`%s`\"\n", name, nameize(column), *tableName, column)
+				g.Printf("%s%s db.Field = \"`%s`.`%s`\"\n", name, nameize(column), *tableName, column)
 			}
 		}
 		g.Printf(")\n")

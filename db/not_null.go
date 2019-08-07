@@ -16,15 +16,15 @@ package db
 import "fmt"
 
 // IsNotNull TODO: NEEDS COMMENT INFO
-func IsNotNull(field string) Operator {
+func IsNotNull(field Field) Operator {
 	return &isNotNullOperator{field}
 }
 
 type isNotNullOperator struct {
-	field string
+	field Field
 }
 
 // Make TODO: NEEDS COMMENT INFO
 func (o *isNotNullOperator) Make() (string, []interface{}) {
-	return fmt.Sprintf("`%s` IS NULL"), []interface{}{}
+	return fmt.Sprintf("`%s` IS NULL", o.field), []interface{}{}
 }
