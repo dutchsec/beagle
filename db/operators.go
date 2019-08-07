@@ -27,3 +27,7 @@ func Active() Operator {
 func True(fld Field) Operator {
 	return &equalOperator{fld, "1"}
 }
+
+func False(fld Field) Operator {
+	return &equalOperator{fld, "0"}
+}
