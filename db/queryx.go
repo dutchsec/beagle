@@ -165,30 +165,6 @@ func (tq Queryx) Where(operator Operator) Queryx {
 	return tq
 }
 
-// TODO: keep track of fields on construct at once, make it an arry
-func (tq Queryx) OrderBy(fields ...Field) Queryx {
-	sfields := make([]string, len(fields))
-	for i, field := range fields {
-		sfields[i] = string(field)
-	}
-
-	ob := orderByOption{sfields, false}
-	tq.builder = append(tq.builder, ob)
-	return tq
-}
-
-// TODO: keep track of fields on construct at once, make it an arry
-func (tq Queryx) OrderByDesc(fields ...Field) Queryx {
-	sfields := make([]string, len(fields))
-	for i, field := range fields {
-		sfields[i] = string(field)
-	}
-
-	ob := orderByOption{sfields, true}
-	tq.builder = append(tq.builder, ob)
-	return tq
-}
-
 func (tq Queryx) Limit(offset, count int) Queryx {
 	lo := limitOption{offset, count}
 	tq.builder = append(tq.builder, lo)

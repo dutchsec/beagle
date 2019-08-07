@@ -13,56 +13,31 @@
 // limitations under the License.
 package db
 
-/*
-// Where TODO: NEEDS COMMENT INFO
-func (qx Queryx) OrderBy(fields ...string) Queryx {
-	q := string(qx.Query)
-	params := qx.Params
-
-	q, params = OrderBy(fields...).Wrap(q, params)
-
-	return Queryx{
-		Query(q),
-		params,
-	}
-}
-
-// Where TODO: NEEDS COMMENT INFO
-func (qx Queryx) OrderByDesc(fields ...string) Queryx {
-	q := string(qx.Query)
-	params := qx.Params
-
-	q, params = OrderByDesc(fields...).Wrap(q, params)
-
-	return Queryx{
-		Query(q),
-		params,
-	}
-}
-
-// OrderByDesc TODO: NEEDS COMMENT INFO
-func OrderByDesc(fields ...string) selectOption {
-	return &orderByOption{fields, true}
-}
-
-// OrderBy TODO: NEEDS COMMENT INFO
-func OrderBy(fields ...string) selectOption {
-	return &orderByOption{fields, false}
-}
-
-// Wrap TODO: NEEDS COMMENT INFO
-func (o *orderByOption) Wrap(query string, params []interface{}) (string, []interface{}) {
-	query = fmt.Sprintf("SELECT * FROM (%s) a ORDER BY %s", query, strings.Join(o.fields, ","))
-
-	if o.desc {
-		query = fmt.Sprintf("%s DESC", query)
-	}
-
-	return query, params
-}
-*/
-
 type orderByOption struct {
 	fields []string
 	desc   bool
+}
+
+// TODO: keep track of fields on construct at once, make it an arry
+func (tq Queryx) OrderBy(fields ...Field) Queryx {
+	sfields := make([]string, len(fields))
+	for i, field := range fields {
+		sfields[i] = string(field)
+	}
+
+	ob := orderByOption{sfields, false}
+	tq.builder = append(tq.builder, ob)
+	return tq
+}
+
+// TODO: keep track of fields on construct at once, make it an arry
+func (tq Queryx) OrderByDesc(fields ...Field) Queryx {
+	sfields := make([]string, len(fields))
+	for i, field := range fields {
+		sfields[i] = string(field)
+	}
+
+	ob := orderByOption{sfields, true}
+	tq.builder = append(tq.builder, ob)
+	return tq
 }
