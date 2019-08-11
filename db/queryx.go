@@ -77,6 +77,8 @@ func (tq Queryx) Build() (Query, []interface{}) {
 
 	params := []interface{}{}
 
+	orderByOptions := []orderByOption{}
+
 	for _, expr := range tq.builder {
 		// b.WriteString(expr.String())
 		if w, ok := expr.(where); ok {
@@ -116,18 +118,28 @@ func (tq Queryx) Build() (Query, []interface{}) {
 			// TODO: join fields
 			b.WriteString(fmt.Sprintf("%s ", gb[0]))
 		} else if ob, ok := expr.(orderByOption); ok {
-			b.WriteString("ORDER BY ")
+			orderByOptions = append(orderByOptions, ob)
+		}
+	}
 
-			// TODO: join fields
-			b.WriteString(fmt.Sprintf("%s ", ob.fields[0]))
+	if len(orderByOptions) > 0 {
 
-			// TODO: join fields
-			if ob.desc {
-				b.WriteString("DESC ")
+		tempStrs := []string{}
+
+		for _, ob := range orderByOptions {
+			for _, fld := range ob.fields {
+				if ob.desc {
+					tempStrs = append(tempStrs, fmt.Sprintf("%s DESC ", fld))
+				} else {
+					tempStrs = append(tempStrs, fmt.Sprintf("%s ASC ", fld))
+				}
 			}
 		}
 
-		fmt.Printf("%#v\n", expr)
+		if len(tempStrs) > 0 {
+			b.WriteString("ORDER BY ")
+			b.WriteString(strings.Join(tempStrs, ","))
+		}
 	}
 
 	fmt.Println(b.String())

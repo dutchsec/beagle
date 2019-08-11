@@ -14,30 +14,21 @@
 package db
 
 type orderByOption struct {
-	fields []string
+	fields []Field
 	desc   bool
 }
 
 // TODO: keep track of fields on construct at once, make it an arry
+// Query().OrderBy(fld).OrderByDesc(fld2)
 func (tq Queryx) OrderBy(fields ...Field) Queryx {
-	sfields := make([]string, len(fields))
-	for i, field := range fields {
-		sfields[i] = string(field)
-	}
-
-	ob := orderByOption{sfields, false}
+	ob := orderByOption{fields, false}
 	tq.builder = append(tq.builder, ob)
 	return tq
 }
 
 // TODO: keep track of fields on construct at once, make it an arry
 func (tq Queryx) OrderByDesc(fields ...Field) Queryx {
-	sfields := make([]string, len(fields))
-	for i, field := range fields {
-		sfields[i] = string(field)
-	}
-
-	ob := orderByOption{sfields, true}
+	ob := orderByOption{fields, true}
 	tq.builder = append(tq.builder, ob)
 	return tq
 }
