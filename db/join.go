@@ -20,8 +20,7 @@ type tableJoinQuery struct {
 
 	joinType string
 
-	left  Field
-	right Field
+	op Operator
 }
 
 func (tq Queryx) LeftJoin(tableName string) tableJoinQuery {
@@ -54,9 +53,8 @@ func (tq Queryx) Join(tableName string) tableJoinQuery {
 	return tjq
 }
 
-func (tjq tableJoinQuery) On(left, right Field) Queryx {
-	tjq.left = left
-	tjq.right = right
+func (tjq tableJoinQuery) On(operator Operator) Queryx {
+	tjq.op = operator
 
 	tq := tjq.tq
 	tq.builder = append(tq.builder, tjq)

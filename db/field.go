@@ -19,6 +19,6 @@ func (s Field) Alias(alias string) {
 	// NOT IMPLEMENTED YET
 }
 
-func (s Field) Build() string {
-	return s.Build()
+func (s Field) Build() (Query, []interface{}) {
+	return Query(s), []interface{}{}
 }

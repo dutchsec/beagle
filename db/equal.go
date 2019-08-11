@@ -16,16 +16,42 @@ package db
 import "fmt"
 
 // Equal TODO: NEEDS COMMENT INFO
-func Equal(field Field, value interface{}) Operator {
-	return &equalOperator{field, value}
+func Equal(left interface{}, right interface{}) Operator {
+	return &equalOperator{left, right}
 }
 
 type equalOperator struct {
-	field Field
-	value interface{}
+	left  interface{}
+	right interface{}
+}
+
+type Builder interface {
+	Build() (Query, []interface{})
 }
 
 // Make TODO: NEEDS COMMENT INFO
 func (o *equalOperator) Make() (string, []interface{}) {
-	return fmt.Sprintf("%s = ?", o.field), []interface{}{o.value}
+	allParams := []interface{}{}
+
+	leftValue := "?"
+
+	if blder, ok := o.left.(Builder); ok {
+		value, params := blder.Build()
+		allParams = append(allParams, params...)
+		leftValue = string(value)
+	} else {
+		allParams = append(allParams, o.left)
+	}
+
+	rightValue := "?"
+
+	if blder, ok := o.right.(Builder); ok {
+		value, params := blder.Build()
+		allParams = append(allParams, params...)
+		rightValue = string(value)
+	} else {
+		allParams = append(allParams, o.right)
+	}
+
+	return fmt.Sprintf("%s = %s", leftValue, rightValue), allParams
 }

@@ -102,12 +102,20 @@ func (tq Queryx) Build() (Query, []interface{}) {
 			}
 
 			b.WriteString(fmt.Sprintf("%s ", tjq.tableName))
-			b.WriteString("ON ")
 
 			// whereStmt, whereParams := tjq.on.Make()
 			// params = append(params, whereParams...)
 
-			b.WriteString(fmt.Sprintf("%s=%s ", tjq.left, tjq.right))
+			// b.WriteString(fmt.Sprintf("%s=%s ", tjq.left, tjq.right))
+			whereStmt, whereParams := tjq.op.Make()
+			params = append(params, whereParams...)
+
+			if whereStmt == "" {
+			} else {
+				b.WriteString("ON ")
+				b.WriteString(whereStmt)
+				b.WriteString(" ")
+			}
 		} else if lo, ok := expr.(limitOption); ok {
 			b.WriteString("LIMIT ")
 
