@@ -303,7 +303,9 @@ func (g *Generator) generate(typeName string) {
 		}
 
 		g.Printf("var (\n")
+
 		for name, columns := range file.types {
+			g.Printf("%s%s db.Table = \"`%s`\"\n", name, nameize(*tableName), *tableName)
 			for _, column := range columns {
 				g.Printf("%s%s db.Field = \"`%s`.`%s`\"\n", name, nameize(column), *tableName, column)
 			}
