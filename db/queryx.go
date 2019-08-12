@@ -116,10 +116,6 @@ func (tq Queryx) Build() (Query, []interface{}) {
 				b.WriteString(whereStmt)
 				b.WriteString(" ")
 			}
-		} else if lo, ok := expr.(limitOption); ok {
-			b.WriteString("LIMIT ")
-
-			b.WriteString(fmt.Sprintf("%d, %d", lo.offset, lo.count))
 		} else if gb, ok := expr.(groupBy); ok {
 			b.WriteString("GROUP BY ")
 
@@ -151,6 +147,14 @@ func (tq Queryx) Build() (Query, []interface{}) {
 	}
 
 	fmt.Println(b.String())
+	for _, expr := range tq.builder {
+		if lo, ok := expr.(limitOption); ok {
+			b.WriteString("LIMIT ")
+
+			b.WriteString(fmt.Sprintf("%d, %d ", lo.offset, lo.count))
+		}
+	}
+
 
 	qry := b.String()
 
