@@ -155,7 +155,6 @@ func (tq Queryx) Build() (Query, []interface{}) {
 		}
 	}
 
-
 	qry := b.String()
 
 	return Query(qry), params
@@ -173,11 +172,6 @@ func DeleteQuery(tableName string) Queryx {
 		tableName: tableName,
 		type_:     "DELETE",
 	}
-}
-
-func (tq Queryx) Fields(fields ...Field) Queryx {
-	tq.fields = fields
-	return tq
 }
 
 func (tq Queryx) Limit(offset, count int) Queryx {
