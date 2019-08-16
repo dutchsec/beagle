@@ -8,7 +8,7 @@ go:
 sudo: required
 dist: xenial
 
-go_import_path: github.com/dutchsec/beagle
+go_import_path: go.dutchsec.com/beagle
 
 os:
     - linux
