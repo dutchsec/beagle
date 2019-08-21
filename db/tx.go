@@ -69,17 +69,19 @@ func findMethod() string {
 func (tx *Tx) Commit() error {
 	err := tx.Tx.Commit()
 
-	if time.Now().Sub(tx.time) > 1*time.Second {
-		log.Warningf("Transaction commit (%s) took long, took: %s, queries=\n * %v.", findMethod(), time.Now().Sub(tx.time), strings.Join(tx.queries, "\n * "))
+	now := time.Now()
+
+	if now.Sub(tx.time) > 1*time.Second {
+		log.Warningf("Transaction commit (%s) took long, took: %s, queries=\n * %v.", findMethod(), now.Sub(tx.time), strings.Join(tx.queries, "\n * "))
 	}
 
-	log.Debugf("Transaction commit (%s), took: %v.", findMethod(), time.Now().Sub(tx.time))
+	log.Debugf("Transaction commit (%s), took: %v.", findMethod(), now.Sub(tx.time))
 	return err
 }
 
 func (tx *Tx) Rollback() error {
 	err := tx.Tx.Rollback()
-	log.Debugf("Transaction rollback, took: %v", time.Now().Sub(tx.time))
+	log.Debugf("Transaction rollback, took: %v", time.Since(tx.time))
 	return err
 }
 

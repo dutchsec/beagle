@@ -68,7 +68,7 @@ func main() {
 
 	data, err := ioutil.ReadFile("LICENSE")
 	if err != nil {
-		log.Fatal("Could not read license file: %s", err.Error())
+		log.Fatalf("Could not read license file: %s", err.Error())
 	}
 
 	for _, arg := range args {
@@ -88,7 +88,7 @@ func main() {
 
 			originalFile, err := ioutil.ReadFile(p)
 			if err != nil {
-				log.Fatal("Could not read file: %s: %s", p, err.Error())
+				log.Fatalf("Could not read file: %s: %s", p, err.Error())
 			}
 
 			// find index to "package"
@@ -115,7 +115,7 @@ func main() {
 			}
 
 			if err := ioutil.WriteFile(p, output.Bytes(), info.Mode()); err != nil {
-				log.Fatal("Could not write file: %s: %s", p, err.Error())
+				log.Fatalf("Could not write file: %s: %s", p, err.Error())
 			}
 
 			// originalFile
