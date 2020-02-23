@@ -22,6 +22,7 @@ import (
 
 	"github.com/jmoiron/sqlx"
 
+	"fmt"
 	logging "github.com/op/go-logging"
 )
 
@@ -71,7 +72,7 @@ type selectOption interface {
 }
 
 // Begin TODO: NEEDS COMMENT INFO
-func (db *DB) Begin(ctx context.Context, opts ...TxOptionFunc) *Tx {
+func (db *DB) Begin(ctx context.Context, opts ...TxOptionFunc) (*Tx, error) {
 	txOptions := &sql.TxOptions{}
 	for _, fn := range opts {
 		fn(txOptions)
@@ -79,8 +80,7 @@ func (db *DB) Begin(ctx context.Context, opts ...TxOptionFunc) *Tx {
 
 	tx, err := db.DB.BeginTxx(ctx, txOptions)
 	if err != nil {
-		log.Error("Error starting transaction: %s", err.Error())
-		return nil
+		return nil, fmt.Errorf("Error starting transaction: %w", err)
 	}
 
 	trace := make([]byte, 1024)
@@ -93,7 +93,7 @@ func (db *DB) Begin(ctx context.Context, opts ...TxOptionFunc) *Tx {
 		m:          &sync.Mutex{},
 		stacktrace: string(trace),
 		time:       time.Now(),
-	}
+	}, nil
 }
 
 // Updater TODO: NEEDS COMMENT INFO
