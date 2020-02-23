@@ -146,7 +146,6 @@ func (tq Queryx) Build() (Query, []interface{}) {
 		}
 	}
 
-	fmt.Println(b.String())
 	for _, expr := range tq.builder {
 		if lo, ok := expr.(limitOption); ok {
 			b.WriteString("LIMIT ")
