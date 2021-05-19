@@ -72,7 +72,12 @@ func sanitize(s string) (string, error) {
 				return "", fmt.Errorf("Warning, unexpected character in field name: %c (%s)", runes[i], s)
 			}
 		case runes[i] == '.':
-			if state == 3 {
+			if state == 1 {
+				field += string(runes[i])
+				i++
+
+				state = 0
+			} else if state == 3 {
 				field += string(runes[i])
 				i++
 
