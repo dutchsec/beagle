@@ -119,15 +119,19 @@ func (tq Queryx) Build() (Query, []interface{}) {
 		} else if gb, ok := expr.(groupBy); ok {
 			b.WriteString("GROUP BY ")
 
+			fields := make([]string, len(gb))
+			for i, field := range gb {
+				fields[i] = string(field)
+			}
+
 			// TODO: join fields
-			b.WriteString(fmt.Sprintf("%s ", gb[0]))
+			b.WriteString(fmt.Sprintf("%s ", strings.Join(fields, ",")))
 		} else if ob, ok := expr.(orderByOption); ok {
 			orderByOptions = append(orderByOptions, ob)
 		}
 	}
 
 	if len(orderByOptions) > 0 {
-
 		tempStrs := []string{}
 
 		for _, ob := range orderByOptions {
