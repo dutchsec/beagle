@@ -17,7 +17,7 @@ import "fmt"
 
 // GreaterThan TODO: NEEDS COMMENT INFO
 func IsNull(field Field) Operator {
-	return &isNullOperator{field, value}
+	return &isNullOperator{field}
 }
 
 type isNullOperator struct {

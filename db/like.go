@@ -25,10 +25,6 @@ type likeOperator struct {
 	right interface{}
 }
 
-type Builder interface {
-	Build() (Query, []interface{})
-}
-
 // Make TODO: NEEDS COMMENT INFO
 func (o *likeOperator) Make() (string, []interface{}) {
 	allParams := []interface{}{}
