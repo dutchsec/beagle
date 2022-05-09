@@ -30,7 +30,9 @@ import (
 type Tx struct {
 	Tx *sqlx.Tx
 
-	m          *sync.Mutex
+	counter uint64
+
+	m          sync.Mutex
 	stacktrace string
 	time       time.Time
 
@@ -67,21 +69,36 @@ func findMethod() string {
 }
 
 func (tx *Tx) Commit() error {
+	tx.m.Lock()
+	defer tx.m.Unlock()
+
+	log.Infof("[%d] tx", tx.counter)
+	defer log.Infof("[%d] tx finished", tx.counter)
+
 	err := tx.Tx.Commit()
+	if err != nil {
+		log.Errorf("[%d] Could not commit transaction (%s): %s: %p", tx.counter, findMethod(), err, tx.Tx)
+		return err
+	}
 
 	now := time.Now()
 
 	if now.Sub(tx.time) > 1*time.Second {
-		log.Warningf("Transaction commit (%s) took long, took: %s, queries=\n * %v.", findMethod(), now.Sub(tx.time), strings.Join(tx.queries, "\n * "))
+		log.Warningf("[%d] Transaction commit (%s) took long, took: %s, queries=\n * %v.", tx.counter, findMethod(), now.Sub(tx.time), strings.Join(tx.queries, "\n * "))
 	}
 
-	log.Debugf("Transaction commit (%s), took: %v.", findMethod(), now.Sub(tx.time))
+	log.Debugf("[%d] Transaction commit (%s), took: %v. %p", tx.counter, findMethod(), now.Sub(tx.time), tx.Tx)
+
+	tx.Tx = nil
 	return err
 }
 
 func (tx *Tx) Rollback() error {
+	tx.m.Lock()
+	defer tx.m.Unlock()
+
 	err := tx.Tx.Rollback()
-	log.Debugf("Transaction rollback, took: %v", time.Since(tx.time))
+	log.Errorf("[%d] Transaction rollback, took: %v", tx.counter, time.Since(tx.time))
 	return err
 }
 
@@ -269,16 +286,17 @@ func (tx *Tx) Execute(qy Queryx) error {
 	defer tx.m.Unlock()
 
 	q, params := qy.Build()
+	log.Debugf("[%d] Executing query: %s", tx.counter, q)
 
 	stmt, err := tx.Preparex(q)
 	if err != nil {
-		log.Errorf("Error preparing query: %s: %s", q, err.Error())
+		log.Errorf("[%d] Error preparing query: %s: %s", tx.counter, q, err.Error())
 		return err
 	}
 
 	_, err = stmt.Exec(params...)
 	if err != nil {
-		log.Errorf("Error executing query: %s: %s", q, err.Error())
+		log.Errorf("[%d] Error executing query: %s: %s", tx.counter, q, err.Error())
 		return err
 	}
 
@@ -287,16 +305,18 @@ func (tx *Tx) Execute(qy Queryx) error {
 
 // Getx TODO: NEEDS COMMENT INFO
 func (tx *Tx) Getx(o interface{}, qy Queryx) error {
+
 	tx.m.Lock()
 	defer tx.m.Unlock()
 
 	q, params := qy.Build()
+	log.Debugf("[%d] Executing query: %s", tx.counter, q)
 
 	if u, ok := o.(Getter); ok {
 		err := u.Get(tx.Tx, q, params)
 		if IsNoRowsErr(err) {
 		} else if err != nil {
-			log.Errorf("Error executing query: %s: %s", q, err.Error())
+			log.Errorf("[%d] Error executing query: %s: %s", tx.counter, q, err.Error())
 		}
 
 		return err
@@ -343,11 +363,14 @@ func (tx *Tx) NamedExec(query string, arg interface{}) (sql.Result, error) {
 	tx.m.Lock()
 	defer tx.m.Unlock()
 
+	log.Debugf("[%d] Executing query: %s", tx.counter, query)
+
 	return tx.Tx.NamedExec(query, arg)
 }
 
 // Update TODO: NEEDS COMMENT INFO
 func (tx *Tx) InsertOrUpdate(o interface{}) error {
+	log.Debugf("[%d] Executing insert or update", tx.counter)
 	if u, ok := o.(InsertOrUpdater); ok {
 		return u.InsertOrUpdate(tx.Tx)
 	}
@@ -358,6 +381,7 @@ func (tx *Tx) InsertOrUpdate(o interface{}) error {
 
 // Update TODO: NEEDS COMMENT INFO
 func (tx *Tx) Update(o interface{}) error {
+	log.Debugf("[%d] Executing update", tx.counter)
 	if u, ok := o.(Updater); ok {
 		return u.Update(tx.Tx)
 	}
@@ -368,6 +392,8 @@ func (tx *Tx) Update(o interface{}) error {
 
 // Delete TODO: NEEDS COMMENT INFO
 func (tx *Tx) Delete(o interface{}) error {
+	log.Debugf("[%d] Executing delete", tx.counter)
+
 	if u, ok := o.(Deleter); ok {
 		return u.Delete(tx.Tx)
 	}
@@ -378,6 +404,8 @@ func (tx *Tx) Delete(o interface{}) error {
 
 // Insert TODO: NEEDS COMMENT INFO
 func (tx *Tx) Insert(o interface{}) error {
+	log.Debugf("[%d] Executing insert", tx.counter)
+
 	if u, ok := o.(Inserter); ok {
 		err := u.Insert(tx.Tx)
 		if err != nil {
