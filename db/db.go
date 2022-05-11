@@ -24,6 +24,7 @@ import (
 
 	"fmt"
 	logging "github.com/op/go-logging"
+	"sync/atomic"
 )
 
 var log = logging.MustGetLogger("go.dutchsec.com/beagle/db")
@@ -71,6 +72,8 @@ type selectOption interface {
 	Wrap(string, []interface{}) (string, []interface{})
 }
 
+var txCounter uint64
+
 // Begin TODO: NEEDS COMMENT INFO
 func (db *DB) Begin(ctx context.Context, opts ...TxOptionFunc) (*Tx, error) {
 	txOptions := &sql.TxOptions{}
@@ -87,10 +90,15 @@ func (db *DB) Begin(ctx context.Context, opts ...TxOptionFunc) (*Tx, error) {
 	count := runtime.Stack(trace, true)
 	trace = trace[:count]
 
+	counter := atomic.AddUint64(&txCounter, 1)
+
+	log.Debugf("[%d] Starting new transaction (%s): %p", counter, findMethod(), tx)
 	return &Tx{
 		Tx: tx,
 
-		m:          &sync.Mutex{},
+		counter: counter,
+
+		m:          sync.Mutex{},
 		stacktrace: string(trace),
 		time:       time.Now(),
 	}, nil
