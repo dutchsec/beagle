@@ -42,10 +42,15 @@ type Tx struct {
 }
 
 func (tx *Tx) Preparex(query Query) (*sqlx.Stmt, error) {
+	//tx.m.Lock()
+	//	defer tx.m.Unlock()
+
 	tx.queries = append(tx.queries, string(query))
 
+	fmt.Println("TX QUERY", query)
 	if stmt, ok := tx.statementsCache.Load(string(query)); ok {
-		return stmt.(*sqlx.Stmt), nil
+		//		return stmt.(*sqlx.Stmt), nil
+		_ = stmt
 	}
 
 	stmt, err := tx.Tx.Preparex(string(query))
@@ -72,6 +77,11 @@ func (tx *Tx) Commit() error {
 	tx.m.Lock()
 	defer tx.m.Unlock()
 
+	// already rolled back / committed
+	if tx.Tx == nil {
+		return fmt.Errorf("Transaction already rolled back or committed")
+	}
+
 	log.Infof("[%d] tx", tx.counter)
 	defer log.Infof("[%d] tx finished", tx.counter)
 
@@ -96,6 +106,11 @@ func (tx *Tx) Commit() error {
 func (tx *Tx) Rollback() error {
 	tx.m.Lock()
 	defer tx.m.Unlock()
+
+	// already rolled back / committed
+	if tx.Tx == nil {
+		return fmt.Errorf("Transaction already rolled back or committed")
+	}
 
 	err := tx.Tx.Rollback()
 	log.Errorf("[%d] Transaction rollback, took: %v", tx.counter, time.Since(tx.time))
