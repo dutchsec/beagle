@@ -26,5 +26,5 @@ type isNullOperator struct {
 
 // Make TODO: NEEDS COMMENT INFO
 func (o *isNullOperator) Make() (string, []interface{}) {
-	return fmt.Sprintf("%s IS NULL "), []interface{}{}
+	return fmt.Sprintf("%s IS NULL "), []interface{}{o.field}
 }
