@@ -2,21 +2,19 @@ package db
 
 import (
 	"testing"
-
-	"go.dutchsec.com/beagle/db"
 )
 
-type ExprFunc func() (db.Query, []interface{})
+type ExprFunc func() (Query, []interface{})
 
 type Set struct {
-	Query db.Queryx
-	Want  db.Query
+	Query Queryx
+	Want  Query
 }
 
 var (
 	TestSet = []Set{{
-		Query: db.SelectQuery("TABLE").Fields("*").OrderBy(db.Field("TEST")),
-		Want:  db.Query("SELECT * FROM TABLE ORDER BY TEST ASC ;"),
+		Query: SelectQuery("TABLE").Fields("*").OrderBy(Field("TEST")),
+		Want:  Query("SELECT * FROM TABLE ORDER BY TEST ASC ;"),
 	},
 	}
 )

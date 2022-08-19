@@ -2,8 +2,6 @@ package db
 
 import (
 	"testing"
-
-	"go.dutchsec.com/beagle/db"
 )
 
 var (
@@ -13,8 +11,8 @@ var (
 		// 	Want:  db.Query("SELECT * FROM TABLE ORDER BY TEST ASC ;"),
 		// },
 		{
-			Query: db.SelectQuery("TABLE1").Fields("DISTINCT *").Join("TABLE2").On(db.Equal(db.Field("TABLE1.TEST"), db.Field("TABLE2.TEST"))).OrderBy(db.Field("TEST")),
-			Want:  db.Query("SELECT * FROM TABLE ORDER BY TEST ASC ;"),
+			Query: SelectQuery("TABLE1").Fields("DISTINCT *").Join("TABLE2").On(Equal(Field("TABLE1.TEST"), Field("TABLE2.TEST"))).OrderBy(Field("TEST")),
+			Want:  Query("SELECT * FROM TABLE ORDER BY TEST ASC ;"),
 		},
 	}
 )

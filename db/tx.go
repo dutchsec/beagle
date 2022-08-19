@@ -73,6 +73,10 @@ func findMethod() string {
 	return strings.TrimSpace(string(parts[6]))
 }
 
+func IsTxDoneErr(err error) bool {
+	return err == sql.ErrTxDone
+}
+
 func (tx *Tx) Commit() error {
 	tx.m.Lock()
 	defer tx.m.Unlock()

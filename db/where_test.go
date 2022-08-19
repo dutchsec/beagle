@@ -2,15 +2,13 @@ package db
 
 import (
 	"testing"
-
-	"go.dutchsec.com/beagle/db"
 )
 
 var (
 	TestSetWhere = []Set{
 		{
-			Query: db.SelectQuery("TABLE").Fields("*").Where(db.Equal(db.Field("TABLE1.TEST"), "test")),
-			Want:  db.Query("SELECT * FROM TABLE WHERE TABLE1.TEST = ? ;"),
+			Query: SelectQuery("TABLE").Fields("*").Where(Equal(Field("TABLE1.TEST"), "test")),
+			Want:  Query("SELECT * FROM TABLE WHERE TABLE1.TEST = ? ;"),
 		},
 	}
 )
