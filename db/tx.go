@@ -38,6 +38,8 @@ type Tx struct {
 
 	statementsCache sync.Map
 
+	id string
+
 	queries []string
 }
 
@@ -47,7 +49,6 @@ func (tx *Tx) Preparex(query Query) (*sqlx.Stmt, error) {
 
 	tx.queries = append(tx.queries, string(query))
 
-	fmt.Println("TX QUERY", query)
 	if stmt, ok := tx.statementsCache.Load(string(query)); ok {
 		//		return stmt.(*sqlx.Stmt), nil
 		_ = stmt
@@ -93,7 +94,7 @@ func (tx *Tx) Commit() error {
 	if err == sql.ErrTxDone {
 		return err
 	} else if err != nil {
-		return fmt.Errorf("[%d] Could not commit transaction (%s): %s: %p", tx.counter, findMethod(), err, tx.Tx)
+		return fmt.Errorf("[%d] Could not commit transaction (%s): %s: %p (%s)", tx.counter, findMethod(), err, tx.Tx, tx.id)
 	}
 
 	now := time.Now()
@@ -118,7 +119,7 @@ func (tx *Tx) Rollback() error {
 	}
 
 	err := tx.Tx.Rollback()
-	log.Errorf("[%d] Transaction rollback, took: %v", tx.counter, time.Since(tx.time))
+	log.Errorf("[%d] Transaction rollback, took: %v (%s)", tx.counter, time.Since(tx.time), tx.id)
 	return err
 }
 
@@ -143,6 +144,19 @@ type fields []Field
 func (f *fields) String() {
 }
 */
+func Caller() string {
+	pc, _, _, ok := runtime.Caller(2)
+	if !ok {
+		return ""
+	}
+
+	details := runtime.FuncForPC(pc)
+	if details == nil {
+		return ""
+	}
+
+	return details.Name()
+}
 
 // Selectx TODO: NEEDS COMMENT INFO
 func (tx *Tx) Selectx(o interface{}, qy Queryx, options ...selectOption) error {
@@ -156,7 +170,7 @@ func (tx *Tx) Selectx(o interface{}, qy Queryx, options ...selectOption) error {
 	defer func() {
 		now := time.Now()
 		if now.Sub(start) > 1*time.Second {
-			log.Warningf("Query took too long %v: %s", now.Sub(start), q)
+			log.Warningf("Query took too long %v: %s (%s) (%s)", now.Sub(start), q, tx.id, Caller())
 		}
 	}()
 
@@ -169,7 +183,7 @@ func (tx *Tx) Selectx(o interface{}, qy Queryx, options ...selectOption) error {
 	if u, ok := o.(Selecter); ok {
 		err := u.Select(tx.Tx, q, params...)
 		if err != nil {
-			log.Errorf("Error executing query: %s: %s", q, err.Error())
+			log.Errorf("Error executing query: %s: %s (%s) (%s)", q, err.Error(), tx.id, Caller())
 		}
 
 		return err
@@ -177,7 +191,7 @@ func (tx *Tx) Selectx(o interface{}, qy Queryx, options ...selectOption) error {
 
 	stmt, err := tx.Preparex(q)
 	if err != nil {
-		log.Errorf("Error executing query: %s: %s", q, err.Error())
+		log.Errorf("Error executing query: %s: %s (%s) (%s)", q, err.Error(), tx.id, Caller())
 		return err
 	}
 
@@ -255,7 +269,7 @@ func (tx *Tx) Countx(qy Queryx) (int, error) {
 
 	stmt, err := tx.Preparex(q)
 	if err != nil {
-		log.Errorf("Error preparing query: %s: %s", q, err.Error())
+		log.Errorf("Error preparing query: %s: %s (%s)", q, err.Error(), tx.id)
 		return 0, err
 	}
 
@@ -263,7 +277,7 @@ func (tx *Tx) Countx(qy Queryx) (int, error) {
 
 	err = stmt.Get(&count, params...)
 	if err != nil {
-		log.Errorf("Error executing query: %s: %s", q, err.Error())
+		log.Errorf("Error executing query: %s: %s (%s)", q, err.Error(), tx.id)
 	}
 
 	return count, err

@@ -25,6 +25,7 @@ import (
 	"fmt"
 	"sync/atomic"
 
+	"github.com/google/uuid"
 	logging "github.com/op/go-logging"
 )
 
@@ -93,9 +94,13 @@ func (db *DB) Begin(ctx context.Context, opts ...TxOptionFunc) (*Tx, error) {
 
 	counter := atomic.AddUint64(&txCounter, 1)
 
-	log.Debugf("[%d] Starting new transaction (%s): %p", counter, findMethod(), tx)
+	id, _ := uuid.NewUUID()
+
+	log.Debugf("[%d] Starting new transaction (%s): %p (%s)", counter, findMethod(), tx, id.String())
+
 	return &Tx{
 		Tx: tx,
+		id: id.String(),
 
 		counter: counter,
 
