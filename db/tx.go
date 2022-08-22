@@ -4,7 +4,7 @@
 // you may not use this file except in compliance with the License.
 // You may obtain a copy of the License at
 //
-//     http://www.apache.org/licenses/LICENSE-2.0
+//	http://www.apache.org/licenses/LICENSE-2.0
 //
 // Unless required by applicable law or agreed to in writing, software
 // distributed under the License is distributed on an "AS IS" BASIS,
@@ -73,22 +73,27 @@ func findMethod() string {
 	return strings.TrimSpace(string(parts[6]))
 }
 
+func IsTxDoneErr(err error) bool {
+	return err == sql.ErrTxDone
+}
+
 func (tx *Tx) Commit() error {
 	tx.m.Lock()
 	defer tx.m.Unlock()
 
 	// already rolled back / committed
 	if tx.Tx == nil {
-		return fmt.Errorf("Transaction already rolled back or committed")
+		return sql.ErrTxDone
 	}
 
 	log.Infof("[%d] tx", tx.counter)
 	defer log.Infof("[%d] tx finished", tx.counter)
 
 	err := tx.Tx.Commit()
-	if err != nil {
-		log.Errorf("[%d] Could not commit transaction (%s): %s: %p", tx.counter, findMethod(), err, tx.Tx)
+	if err == sql.ErrTxDone {
 		return err
+	} else if err != nil {
+		return fmt.Errorf("[%d] Could not commit transaction (%s): %s: %p", tx.counter, findMethod(), err, tx.Tx)
 	}
 
 	now := time.Now()
@@ -109,7 +114,7 @@ func (tx *Tx) Rollback() error {
 
 	// already rolled back / committed
 	if tx.Tx == nil {
-		return fmt.Errorf("Transaction already rolled back or committed")
+		return sql.ErrTxDone
 	}
 
 	err := tx.Tx.Rollback()
