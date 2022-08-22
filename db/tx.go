@@ -87,14 +87,14 @@ func (tx *Tx) Commit() error {
 		return sql.ErrTxDone
 	}
 
-	log.Infof("[%d] tx", tx.counter)
-	defer log.Infof("[%d] tx finished", tx.counter)
+	log.Infof("[%d] tx (%s)", tx.counter, findMethod())
+	defer log.Infof("[%d] tx finished (%s)", tx.counter, findMethod())
 
 	err := tx.Tx.Commit()
 	if err == sql.ErrTxDone {
 		return err
 	} else if err != nil {
-		return fmt.Errorf("[%d] Could not commit transaction (%s): %s: %p (%s)", tx.counter, findMethod(), err, tx.Tx, tx.id)
+		return fmt.Errorf("[%d] Could not commit transaction (%s): %s: %p", tx.counter, findMethod(), err)
 	}
 
 	now := time.Now()
@@ -144,19 +144,6 @@ type fields []Field
 func (f *fields) String() {
 }
 */
-func Caller() string {
-	pc, _, _, ok := runtime.Caller(2)
-	if !ok {
-		return ""
-	}
-
-	details := runtime.FuncForPC(pc)
-	if details == nil {
-		return ""
-	}
-
-	return details.Name()
-}
 
 // Selectx TODO: NEEDS COMMENT INFO
 func (tx *Tx) Selectx(o interface{}, qy Queryx, options ...selectOption) error {
@@ -170,7 +157,7 @@ func (tx *Tx) Selectx(o interface{}, qy Queryx, options ...selectOption) error {
 	defer func() {
 		now := time.Now()
 		if now.Sub(start) > 1*time.Second {
-			log.Warningf("Query took too long %v: %s (%s) (%s)", now.Sub(start), q, tx.id, Caller())
+			log.Warningf("[%d] Query took too long %v: %s (%s)", tx.counter, now.Sub(start), q, findMethod())
 		}
 	}()
 
@@ -183,7 +170,7 @@ func (tx *Tx) Selectx(o interface{}, qy Queryx, options ...selectOption) error {
 	if u, ok := o.(Selecter); ok {
 		err := u.Select(tx.Tx, q, params...)
 		if err != nil {
-			log.Errorf("Error executing query: %s: %s (%s) (%s)", q, err.Error(), tx.id, Caller())
+			log.Errorf("[%d] Error executing query: %s: %s (%s)", tx.counter, q, err.Error(), findMethod())
 		}
 
 		return err
@@ -191,7 +178,7 @@ func (tx *Tx) Selectx(o interface{}, qy Queryx, options ...selectOption) error {
 
 	stmt, err := tx.Preparex(q)
 	if err != nil {
-		log.Errorf("Error executing query: %s: %s (%s) (%s)", q, err.Error(), tx.id, Caller())
+		log.Errorf("[%d] Error executing query: %s: %s (%s) (%s)", tx.counter, q, err.Error(), findMethod())
 		return err
 	}
 
