@@ -13,7 +13,11 @@
 // limitations under the License.
 package db
 
-import "errors"
+import (
+	"errors"
+
+	"github.com/go-sql-driver/mysql"
+)
 
 //  TODO: NEEDS COMMENT INFO
 var (
@@ -24,3 +28,12 @@ var (
 	ErrNoUpdaterFound         = errors.New("No Updater found")
 	ErrNoInserterFound        = errors.New("No Inserter found")
 )
+
+func IsDuplicateKeyErr(err error) bool {
+	merr, ok := err.(*mysql.MySQLError)
+	if !ok {
+		return false
+	}
+
+	return merr.Number == 1062
+}
