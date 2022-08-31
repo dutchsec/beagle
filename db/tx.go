@@ -43,9 +43,10 @@ type Tx struct {
 	queries []string
 }
 
+// +checklocks:tx.m
 func (tx *Tx) Preparex(query Query) (*sqlx.Stmt, error) {
-	tx.m.Lock()
-	defer tx.m.Unlock()
+	//tx.m.Lock()
+	//defer tx.m.Unlock()
 
 	tx.queries = append(tx.queries, string(query))
 
