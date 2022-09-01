@@ -47,6 +47,12 @@ func (tx *Tx) Preparex(query Query) (*sqlx.Stmt, error) {
 	tx.m.Lock()
 	defer tx.m.Unlock()
 
+	return tx.preparex(query)
+}
+
+// +checklocks:tx.m
+func (tx *Tx) preparex(query Query) (*sqlx.Stmt, error) {
+
 	tx.queries = append(tx.queries, string(query))
 
 	if stmt, ok := tx.statementsCache.Load(string(query)); ok {
@@ -94,7 +100,7 @@ func (tx *Tx) Commit() error {
 	if err == sql.ErrTxDone {
 		return err
 	} else if err != nil {
-		return fmt.Errorf("[%d] Could not commit transaction (%s): %s: %p", tx.counter, findMethod(), err)
+		return fmt.Errorf("[%d] Could not commit transaction (%s): %s", tx.counter, findMethod(), err)
 	}
 
 	now := time.Now()
@@ -176,7 +182,7 @@ func (tx *Tx) Selectx(o interface{}, qy Queryx, options ...selectOption) error {
 		return err
 	}
 
-	stmt, err := tx.Preparex(q)
+	stmt, err := tx.preparex(q)
 	if err != nil {
 		log.Errorf("[%d] Error executing query: %s: %s (%s) (%s)", tx.counter, q, err.Error(), findMethod())
 		return err
@@ -230,7 +236,7 @@ func (tx *Tx) Exists(qy Queryx) (bool, error) {
 
 	q, params := qy.Build()
 
-	stmt, err := tx.Preparex(Query(fmt.Sprintf("SELECT EXISTS(%s)", string(q))))
+	stmt, err := tx.preparex(Query(fmt.Sprintf("SELECT EXISTS(%s)", string(q))))
 	if err != nil {
 		log.Errorf("Error preparing query: %s: %s", q, err.Error())
 		return false, err
@@ -254,7 +260,7 @@ func (tx *Tx) Countx(qy Queryx) (int, error) {
 
 	q, params := qy.Build()
 
-	stmt, err := tx.Preparex(q)
+	stmt, err := tx.preparex(q)
 	if err != nil {
 		log.Errorf("Error preparing query: %s: %s (%s)", q, err.Error(), tx.id)
 		return 0, err
@@ -309,7 +315,7 @@ func (tx *Tx) Execute(qy Queryx) error {
 	q, params := qy.Build()
 	log.Debugf("[%d] Executing query: %s", tx.counter, q)
 
-	stmt, err := tx.Preparex(q)
+	stmt, err := tx.preparex(q)
 	if err != nil {
 		log.Errorf("[%d] Error preparing query: %s: %s", tx.counter, q, err.Error())
 		return err
