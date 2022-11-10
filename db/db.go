@@ -76,6 +76,21 @@ type selectOption interface {
 
 var txCounter uint64
 
+func (db *DB) Do(ctx context.Context, fn func(tx *Tx) error) error {
+	tx, err := db.Begin(ctx)
+	if err != nil {
+		return err
+	}
+
+	if err := fn(tx); err != nil {
+		tx.Rollback()
+		return err
+	}
+
+	tx.Commit()
+	return nil
+}
+
 // Begin TODO: NEEDS COMMENT INFO
 func (db *DB) Begin(ctx context.Context, opts ...TxOptionFunc) (*Tx, error) {
 	txOptions := &sql.TxOptions{}
