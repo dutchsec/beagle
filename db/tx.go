@@ -188,7 +188,7 @@ func (tx *Tx) Selectx(o interface{}, qy Queryx, options ...selectOption) error {
 		return err
 	}
 
-	return stmt.Select(o, params...)
+	return stmt.Unsafe().Select(o, params...)
 }
 
 // Selectx TODO: NEEDS COMMENT INFO

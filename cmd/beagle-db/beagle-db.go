@@ -409,7 +409,7 @@ func (g *Generator) generate(typeName string) {
 				return err
 			}
 
-			if err := stmt.Get(s, params...); err != nil {
+			if err := stmt.Unsafe().Get(s, params...); err != nil {
 				return err
 			}
 
