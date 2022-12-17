@@ -87,8 +87,7 @@ func (db *DB) Do(ctx context.Context, fn func(tx *Tx) error) error {
 		return err
 	}
 
-	tx.Commit()
-	return nil
+	return tx.Commit()
 }
 
 // Begin TODO: NEEDS COMMENT INFO
