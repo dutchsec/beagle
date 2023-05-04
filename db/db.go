@@ -16,6 +16,8 @@ package db
 import (
 	"context"
 	"database/sql"
+	"io"
+	"os"
 	"runtime"
 	"sync"
 	"time"
@@ -30,6 +32,22 @@ import (
 )
 
 var log = logging.MustGetLogger("go.dutchsec.com/beagle/db")
+
+var once sync.Once
+
+func init() {
+	_, ok := os.LookupEnv("BEAGLE_NOLOG")
+	if ok {
+		DiscardLogging()
+	}
+}
+
+func DiscardLogging() {
+	once.Do(func() {
+		discard := logging.NewLogBackend(io.Discard, "", 0)
+		logging.SetBackend(discard)
+	})
+}
 
 // Newerer TODO: NEEDS COMMENT INFO
 type Newerer interface {
