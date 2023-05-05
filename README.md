@@ -43,3 +43,6 @@ Run the application and restart on file modifications.
 beagle run go run main.go
 ```
 
+### Import Beagle
+
+package db logs to stdout, if this is unwanted this can be switched off. At start call `db.DiscardLogging()` or set the environment variable `BEAGLE_NOLOG`.
