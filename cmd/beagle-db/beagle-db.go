@@ -212,6 +212,7 @@ func prefixDirectory(directory string, names []string) []string {
 func (g *Generator) parsePackage(patterns []string, tags []string) {
 	cfg := &packages.Config{
 		Mode: packages.LoadSyntax,
+		Fset: token.NewFileSet(),
 		// TODO: Need to think about constants in test files. Maybe write type_string_test.go
 		// in a separate pass? For later.
 		Tests:      false,
